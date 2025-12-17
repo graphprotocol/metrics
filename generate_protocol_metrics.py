@@ -93,6 +93,100 @@ def log_message(message: str):
     print(timestamped)
 
 
+def fetch_network_comparison_stats(api_key: str) -> dict:
+    """
+    Fetch network statistics for Arbitrum and Ethereum for comparison.
+    
+    Args:
+        api_key: The Graph API key
+        
+    Returns:
+        Dictionary with 'arbitrum' and 'ethereum' keys containing network stats
+    """
+    log_message("Fetching network comparison statistics...")
+    
+    # Subgraph IDs
+    ARBITRUM_SUBGRAPH_ID = "DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp"
+    ETHEREUM_SUBGRAPH_ID = "9Co7EQe5PgW3ugCUJrJgRv4u9zdEuDJf8NvMWftNsBH8"
+    
+    base_url = "https://gateway-arbitrum.network.thegraph.com/api"
+    headers = {"Content-Type": "application/json"}
+    
+    query = """
+    {
+      graphNetwork(id: "1") {
+        totalIndexingRewards
+        totalIndexingIndexerRewards
+        totalIndexingDelegatorRewards
+        delegatorCount
+      }
+    }
+    """
+    
+    active_delegators_query = """
+    {
+      delegators(where: {activeStakesCount_gt: 0}, first: 1000) {
+        id
+      }
+    }
+    """
+    
+    result = {
+        'arbitrum': {},
+        'ethereum': {}
+    }
+    
+    # Fetch Arbitrum stats
+    try:
+        arb_url = f"{base_url}/{api_key}/subgraphs/id/{ARBITRUM_SUBGRAPH_ID}"
+        response = requests.post(arb_url, json={"query": query}, headers=headers)
+        if response.status_code == 200:
+            data = response.json().get("data", {}).get("graphNetwork", {})
+            if data:
+                # Get active delegators count (simplified - first 1000)
+                active_del_response = requests.post(arb_url, json={"query": active_delegators_query}, headers=headers)
+                active_delegators_count = 0
+                if active_del_response.status_code == 200:
+                    active_delegators_count = len(active_del_response.json().get("data", {}).get("delegators", []))
+                
+                result['arbitrum'] = {
+                    'total_rewards': int(data.get("totalIndexingRewards", "0")) // 10**18,
+                    'indexer_rewards': int(data.get("totalIndexingIndexerRewards", "0")) // 10**18,
+                    'delegator_rewards': int(data.get("totalIndexingDelegatorRewards", "0")) // 10**18,
+                    'delegator_count': int(data.get("delegatorCount", "0")),
+                    'active_delegators': active_delegators_count
+                }
+                log_message(f"Arbitrum stats fetched: Total Rewards={result['arbitrum']['total_rewards']:,}")
+    except Exception as e:
+        log_message(f"Error fetching Arbitrum stats: {e}")
+    
+    # Fetch Ethereum stats
+    try:
+        eth_url = f"{base_url}/{api_key}/subgraphs/id/{ETHEREUM_SUBGRAPH_ID}"
+        response = requests.post(eth_url, json={"query": query}, headers=headers)
+        if response.status_code == 200:
+            data = response.json().get("data", {}).get("graphNetwork", {})
+            if data:
+                # Get active delegators count (simplified - first 1000)
+                active_del_response = requests.post(eth_url, json={"query": active_delegators_query}, headers=headers)
+                active_delegators_count = 0
+                if active_del_response.status_code == 200:
+                    active_delegators_count = len(active_del_response.json().get("data", {}).get("delegators", []))
+                
+                result['ethereum'] = {
+                    'total_rewards': int(data.get("totalIndexingRewards", "0")) // 10**18,
+                    'indexer_rewards': int(data.get("totalIndexingIndexerRewards", "0")) // 10**18,
+                    'delegator_rewards': int(data.get("totalIndexingDelegatorRewards", "0")) // 10**18,
+                    'delegator_count': int(data.get("delegatorCount", "0")),
+                    'active_delegators': active_delegators_count
+                }
+                log_message(f"Ethereum stats fetched: Total Rewards={result['ethereum']['total_rewards']:,}")
+    except Exception as e:
+        log_message(f"Error fetching Ethereum stats: {e}")
+    
+    return result
+
+
 def fetch_rewards_metrics(api_key: str) -> tuple:
     """
     Fetch rewards distribution metrics from The Graph Network (Arbitrum).
@@ -322,7 +416,7 @@ def fetch_network_subgraph_counts(api_key: str) -> List[NetworkIndexerData]:
     return result
 
 
-def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: tuple, rewards_metrics: tuple, output_path: str = "index.html"):
+def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: tuple, rewards_metrics: tuple, network_comparison: dict, output_path: str = "index.html"):
     """
     Generate HTML dashboard with network metrics.
     
@@ -330,6 +424,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         data: List of NetworkIndexerData objects
         delegation_metrics: Tuple of (total_delegated, total_undelegated, net, events_list)
         rewards_metrics: Tuple of (total_rewards, indexer_rewards, delegator_rewards)
+        network_comparison: Dictionary with 'arbitrum' and 'ethereum' network stats
         output_path: Path to save the HTML file
     """
     # Calculate total across all networks
@@ -620,6 +715,37 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             font-size: 0.85em;
         }}
         
+        #networkComparisonTable {{
+            margin-top: 20px;
+            display: none;
+        }}
+        
+        #networkComparisonTable table {{
+            font-size: 0.9em;
+        }}
+        
+        #networkComparisonTable th {{
+            font-size: 0.9em;
+            background: rgba(111, 76, 255, 0.2);
+        }}
+        
+        #networkComparisonTable td {{
+            font-size: 0.85em;
+        }}
+        
+        #networkComparisonTable .network-header {{
+            background: rgba(111, 76, 255, 0.3);
+            font-weight: bold;
+            color: #F8F6FF;
+        }}
+        
+        #networkComparisonTable .row-label {{
+            font-weight: 600;
+            color: #9CA3AF;
+            text-align: left;
+            padding-left: 20px;
+        }}
+        
         #delegationTable a {{
             color: #F8F6FF;
             text-decoration: none;
@@ -834,8 +960,56 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                 <div class="stats-card">
                     <h2>GRT Given to<br/>Delegators</h2>
                     <div class="total" style="color: #4ECDC4;">{delegator_rewards:,}</div>
-                    <div class="percentage" style="font-size: 0.75em;">GRT</div>
+                    <div class="percentage" style="font-size: 0.75em;">
+                        <span>GRT</span>
+                        <span class="toggle-arrow" onclick="toggleNetworkComparison(this)" title="Expand network comparison">›</span>
+                    </div>
                 </div>
+            </div>
+            
+            <div id="networkComparisonTable">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;"></th>
+                            <th class="network-header" style="width: 30%;">Arbitrum</th>
+                            <th class="network-header" style="width: 30%;">Ethereum</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+    
+    # Add network comparison data
+    arb_stats = network_comparison.get('arbitrum', {})
+    eth_stats = network_comparison.get('ethereum', {})
+    
+    html_content += f"""
+                        <tr>
+                            <td class="row-label">Total Rewards:</td>
+                            <td>{arb_stats.get('total_rewards', 0):,} GRT</td>
+                            <td>{eth_stats.get('total_rewards', 0):,} GRT</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">Indexer Rewards:</td>
+                            <td>{arb_stats.get('indexer_rewards', 0):,} GRT</td>
+                            <td>{eth_stats.get('indexer_rewards', 0):,} GRT</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">Delegator Rewards:</td>
+                            <td>{arb_stats.get('delegator_rewards', 0):,} GRT</td>
+                            <td>{eth_stats.get('delegator_rewards', 0):,} GRT</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">Total Delegators (historical):</td>
+                            <td>{arb_stats.get('delegator_count', 0):,}</td>
+                            <td>{eth_stats.get('delegator_count', 0):,}</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">Active Delegators (with GRT):</td>
+                            <td>{arb_stats.get('active_delegators', 0):,}+</td>
+                            <td>{eth_stats.get('active_delegators', 0):,}+</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             
             <div id="delegationTable">
@@ -987,6 +1161,21 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                 console.log('Delegation table hidden');
             }}
         }}
+        
+        function toggleNetworkComparison(element) {{
+            element.classList.toggle('expanded');
+            const comparisonTable = document.getElementById('networkComparisonTable');
+            
+            if (element.classList.contains('expanded')) {{
+                // Show network comparison table
+                comparisonTable.style.display = 'block';
+                console.log('Network comparison table shown');
+            }} else {{
+                // Hide network comparison table
+                comparisonTable.style.display = 'none';
+                console.log('Network comparison table hidden');
+            }}
+        }}
     </script>
 </body>
 </html>
@@ -1012,6 +1201,9 @@ def main():
         log_message("Please create a .env file with GRAPH_API_KEY=your_api_key")
         return
     
+    # Fetch network comparison stats
+    network_comparison = fetch_network_comparison_stats(api_key)
+    
     # Fetch rewards metrics
     rewards_metrics = fetch_rewards_metrics(api_key)
     
@@ -1026,7 +1218,7 @@ def main():
         return
     
     # Generate HTML dashboard
-    generate_html_dashboard(network_data, delegation_metrics, rewards_metrics)
+    generate_html_dashboard(network_data, delegation_metrics, rewards_metrics, network_comparison)
     
     log_message("Dashboard generation completed successfully!")
 
