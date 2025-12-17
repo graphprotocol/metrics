@@ -839,6 +839,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         #networkComparisonTable {{
             margin-top: 20px;
             display: none;
+            padding-bottom: 20px;
         }}
         
         #networkComparisonTable table {{
@@ -867,49 +868,49 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             padding-left: 20px;
         }}
         
-        #quarterlyTable {{
+        #networkComparisonTable .quarterly-section {{
             margin-top: 30px;
         }}
         
-        #quarterlyTable h3 {{
+        #networkComparisonTable .quarterly-section h3 {{
             color: #F8F6FF;
             font-size: 1.3em;
             margin-bottom: 20px;
             text-align: center;
         }}
         
-        #quarterlyTable table {{
+        #networkComparisonTable .quarterly-section table {{
             font-size: 0.9em;
         }}
         
-        #quarterlyTable th {{
+        #networkComparisonTable .quarterly-section th {{
             background: rgba(111, 76, 255, 0.2);
             font-size: 0.85em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }}
         
-        #quarterlyTable td {{
+        #networkComparisonTable .quarterly-section td {{
             font-size: 0.85em;
         }}
         
-        #quarterlyTable .quarter-cell {{
+        #networkComparisonTable .quarter-cell {{
             font-weight: 600;
             color: #6F4CFF;
             font-size: 1.1em;
         }}
         
-        #quarterlyTable .period-cell {{
+        #networkComparisonTable .period-cell {{
             color: #9CA3AF;
             font-style: italic;
         }}
         
-        #quarterlyTable .number-cell {{
+        #networkComparisonTable .number-cell {{
             font-family: 'Courier New', monospace;
             font-weight: 500;
         }}
         
-        #quarterlyTable tbody tr:hover {{
+        #networkComparisonTable .quarterly-section tbody tr:hover {{
             background-color: rgba(111, 76, 255, 0.1);
         }}
         
@@ -1177,21 +1178,20 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            
-            <div id="quarterlyTable">
-                <h3>📅 Arbitrum Quarterly Rewards Distribution</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Quarter</th>
-                            <th>Period</th>
-                            <th>Total Rewards (GRT)</th>
-                            <th>Indexer Rewards (GRT)</th>
-                            <th>Delegator Rewards (GRT)</th>
-                        </tr>
-                    </thead>
-                    <tbody>"""
+                
+                <div class="quarterly-section">
+                    <h3>Arbitrum Quarterly Rewards Distribution</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Quarter</th>
+                                <th>Period</th>
+                                <th>Total Rewards (GRT)</th>
+                                <th>Indexer Rewards (GRT)</th>
+                                <th>Delegator Rewards (GRT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>"""
     
     # Add quarterly data rows
     for quarter in quarterly_data:
@@ -1203,17 +1203,18 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             delegator_pct = 0
         
         html_content += f"""
-                        <tr>
-                            <td class="quarter-cell">{quarter['quarter']}</td>
-                            <td class="period-cell">{quarter['period']}</td>
-                            <td class="number-cell">{quarter['total_rewards']:,}</td>
-                            <td class="number-cell">{quarter['indexer_rewards']:,} ({indexer_pct:.1f}%)</td>
-                            <td class="number-cell">{quarter['delegator_rewards']:,} ({delegator_pct:.1f}%)</td>
-                        </tr>"""
+                            <tr>
+                                <td class="quarter-cell">{quarter['quarter']}</td>
+                                <td class="period-cell">{quarter['period']}</td>
+                                <td class="number-cell">{quarter['total_rewards']:,}</td>
+                                <td class="number-cell">{quarter['indexer_rewards']:,} ({indexer_pct:.1f}%)</td>
+                                <td class="number-cell">{quarter['delegator_rewards']:,} ({delegator_pct:.1f}%)</td>
+                            </tr>"""
     
     html_content += f"""
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             
             <div id="delegationTable">
