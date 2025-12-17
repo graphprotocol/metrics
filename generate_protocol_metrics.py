@@ -537,13 +537,14 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
         <div class="content">
             <div class="stats-container">
                 <div class="stats-card">
+                    <h2>Total Subgraphs<br/>(All Networks)</h2>
+                    <div class="total">{total_all_networks:,}</div>
+                    <div class="percentage"></div>
+                </div>
+                <div class="stats-card">
                     <h2>Total Subgraphs<br/>(Top 20 Chains)</h2>
                     <div class="total">{total_top_20:,}</div>
                     <div class="percentage">{percentage:.1f}% of total</div>
-                </div>
-                <div class="stats-card">
-                    <h2>Total Subgraphs<br/>(All Networks)</h2>
-                    <div class="total">{total_all_networks:,}</div>
                 </div>
             </div>
             
