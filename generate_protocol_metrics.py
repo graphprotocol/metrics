@@ -550,6 +550,15 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             font-size: 0.85em;
         }}
         
+        #delegationTable a {{
+            color: #F8F6FF;
+            text-decoration: none;
+        }}
+        
+        #delegationTable a:hover {{
+            text-decoration: underline;
+        }}
+        
         table {{
             width: 100%;
             border-collapse: collapse;
@@ -722,13 +731,13 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                     <h2>Total Delegated</h2>
                     <div class="total" style="color: #4CAF50;">{total_delegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
                 <div class="stats-card tooltip">
                     <h2>Total Undelegated</h2>
                     <div class="total" style="color: #f44336;">{total_undelegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
                 <div class="stats-card tooltip">
                     <h2>Net</h2>
@@ -737,7 +746,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                         <span style="font-size: 0.75em;">GRT</span>
                         <span class="toggle-arrow" onclick="toggleNetExpand(this)" title="Expand delegation events">›</span>
                     </div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
             </div>
             
@@ -755,8 +764,12 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                     </thead>
                     <tbody>"""
     
-    # Add delegation events to table (limit to first 50 for performance)
-    for event in events_list[:50]:
+    # Add delegation events to table (filter for >= 10,000 GRT)
+    for event in events_list:
+        # Filter: only show transactions of 10,000 GRT or more
+        if event["tokens"] < 10000:
+            continue
+            
         event_label = "✅ Delegation" if event["type"] == "delegation" else "❌ Undelegation"
         event_date = datetime.fromtimestamp(event["timestamp"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
         indexer_short = event["indexer"][:8] + "..." + event["indexer"][-6:]
