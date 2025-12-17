@@ -420,7 +420,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         }}
         
         .stats-card .total {{
-            font-size: 2em;
+            font-size: 1.5em;
             color: #4CAF50;
             font-weight: 600;
             margin: 0;
