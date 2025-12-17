@@ -516,7 +516,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="https://graphtools.pro">
+        <a href="../index.html">
             <span class="home-icon"></span>
             <b>Home</b>
         </a>
