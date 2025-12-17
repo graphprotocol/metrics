@@ -574,7 +574,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
                 </div>
             </div>
             
-            <table id="networkTable" style="transition: all 0.3s ease;">
+            <table id="networkTable" style="display: none; transition: all 0.3s ease;">
                 <thead>
                     <tr>
                         <th style="width: 10%;">Rank</th>
