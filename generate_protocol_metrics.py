@@ -772,7 +772,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                             <td><a href="https://arbiscan.io/tx/{event['tx_hash']}" target="_blank"><span style="font-size: 0.85em;">view</span></a></td>
                         </tr>"""
     
-    html_content += """
+    html_content += f"""
                     </tbody>
                 </table>
             </div>
