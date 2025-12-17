@@ -8,17 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Two square stats cards (250x250px) displaying metrics side by side
+- Two stats cards (200x180px) displaying metrics side by side
 - Total Subgraphs (Top 20 Chains) card with percentage of total networks
 - Total Subgraphs (All Networks) card showing complete network count
 - Percentage calculation showing top 20 chains vs all networks
 
 ### Changed
-- Replaced single rectangular stats card with two square cards
-- Optimized font sizes for square card format
+- Replaced single rectangular stats card with two compact cards
+- Made stats cards smaller and more compact (200x180px instead of 250x250px)
+- Aligned stats cards to the left instead of center
+- Optimized font sizes for compact card format
 - Updated footer to display dynamic generation timestamp instead of static text
 - Removed "Top 20 Networks by Subgraph Count" subtitle from header
+- Removed timestamp and version from header subtitle
 - Improved responsive design for mobile devices with stacked cards
+- Reduced padding and gaps for more efficient space usage
 
 ### Technical
 - Added calculation for total subgraphs across all networks (not just top 20)
