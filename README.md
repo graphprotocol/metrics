@@ -99,6 +99,18 @@ Accessible by clicking the arrow on the "GRT Given to Delegators" card:
   - Active Delegators (with GRT) - shows 1,000+ as approximation
 - **Default**: Hidden (click arrow to reveal)
 
+### Arbitrum Quarterly Rewards Distribution
+Always visible table showing historical quarterly data:
+- **Quarters Displayed**: 6 most recent quarters (Q3-2025 to Q2-2024)
+- **Columns**:
+  - Quarter (e.g., Q3-2025)
+  - Period (date range)
+  - Total Rewards (GRT)
+  - Indexer Rewards (GRT) with percentage
+  - Delegator Rewards (GRT) with percentage
+- **Data Source**: Real-time from Arbitrum Analytics subgraph
+- **Purple Theme**: Matches overall dashboard styling
+
 ### Subgraph Metrics (Second Row)
 - **Card 1**: Total Subgraphs (All Networks) - Shows complete count across all 150+ networks
 - **Card 2**: Total Subgraphs (Top 20 Chains) - Shows top 20 count with percentage of total

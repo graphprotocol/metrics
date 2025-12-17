@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Arbitrum Quarterly Rewards Distribution table**: Historical quarterly rewards data
+  - Shows 6 most recent quarters (Q3-2025 through Q2-2024)
+  - Includes Q3-2025 (Jul-Sep 2025) - newly added quarter
+  - Displays quarter, period, total rewards, indexer rewards, delegator rewards
+  - Shows percentage breakdown of indexer vs delegator rewards per quarter
+  - Real-time data from Arbitrum Analytics subgraph
+  - Purple-themed styling with monospace numbers
+  - Hover effects on table rows
+  - Always visible (not collapsible)
+- `fetch_quarterly_arbitrum_data()` function to query quarterly data
+  - Queries graphNetworkDailyDatas from Arbitrum Analytics subgraph
+  - Calculates differences between quarter start and end dates
+  - Timestamp to day number conversion (genesis: 2020-12-17)
+  - Wei to GRT conversion for all reward values
+  - Fallback data support for incomplete historical data
+  - Real quarterly data: Q3-2025: 74.7M, Q2-2025: 73.8M, Q1-2025: 76.2M GRT
 - **Network comparison table**: Expandable table comparing Arbitrum vs Ethereum networks
   - Triggered by arrow button on "GRT Given to Delegators" card
   - Shows side-by-side comparison of both networks
