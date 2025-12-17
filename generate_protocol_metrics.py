@@ -367,6 +367,29 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
             margin: 0;
             align-self: end;
             padding-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }}
+        
+        .toggle-arrow {{
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #9CA3AF;
+            transition: all 0.3s ease;
+            user-select: none;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }}
+        
+        .toggle-arrow:hover {{
+            color: #F8F6FF;
+            background: rgba(156, 163, 175, 0.2);
+        }}
+        
+        .toggle-arrow.expanded {{
+            transform: rotate(90deg);
         }}
         
         table {{
@@ -544,7 +567,10 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
                 <div class="stats-card">
                     <h2>Total Subgraphs<br/>(Top 20 Chains)</h2>
                     <div class="total">{total_top_20:,}</div>
-                    <div class="percentage">{percentage:.1f}% of total</div>
+                    <div class="percentage">
+                        <span>{percentage:.1f}% of total</span>
+                        <span class="toggle-arrow" onclick="toggleExpand(this)" title="Expand details">›</span>
+                    </div>
                 </div>
             </div>
             
@@ -610,6 +636,21 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
             </div>
         </div>
     </div>
+    
+    <script>
+        function toggleExpand(element) {{
+            element.classList.toggle('expanded');
+            
+            // Placeholder for future functionality
+            if (element.classList.contains('expanded')) {{
+                console.log('Expanded - show details');
+                // Future: Show additional details/charts
+            }} else {{
+                console.log('Collapsed - hide details');
+                // Future: Hide additional details/charts
+            }}
+        }}
+    </script>
 </body>
 </html>
 """
