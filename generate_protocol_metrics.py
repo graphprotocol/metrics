@@ -323,9 +323,9 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
         
         .stats-container {{
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 30px;
-            justify-content: center;
+            justify-content: flex-start;
             flex-wrap: wrap;
         }}
         
@@ -333,10 +333,10 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
             background: rgba(12, 10, 29, 0.6);
             border: 1px solid #9CA3AF;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
-            flex: 0 0 250px;
-            min-height: 250px;
+            flex: 0 0 200px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -344,22 +344,22 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
         }}
         
         .stats-card h2 {{
-            font-size: 1.1em;
-            margin-bottom: 15px;
+            font-size: 0.95em;
+            margin-bottom: 12px;
             color: #F8F6FF;
             font-weight: 400;
-            line-height: 1.3;
+            line-height: 1.2;
         }}
         
         .stats-card .total {{
-            font-size: 2.5em;
+            font-size: 2em;
             color: #4CAF50;
             font-weight: 600;
-            margin: 10px 0;
+            margin: 8px 0;
         }}
         
         .stats-card .percentage {{
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #9CA3AF;
             margin-top: 5px;
         }}
@@ -527,9 +527,6 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
     <div class="container">
         <div class="header">
             <h1>The Graph Protocol Metrics</h1>
-            <div class="subtitle" style="margin-top: 10px; font-size: 0.85em;">
-                Generated on: {timestamp} | Version: v{VERSION}
-            </div>
         </div>
         
         <div class="content">
