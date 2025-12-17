@@ -88,8 +88,10 @@ Accessible by clicking the arrow on the Net card:
 - **Card 3**: GRT Given to Delegators - Portion of rewards distributed to delegators (cyan)
   - Interactive arrow button (›/∨) to expand/collapse network comparison table
 
-### Network Comparison Table (Collapsible)
+### Network Comparison & Quarterly Data (Collapsible)
 Accessible by clicking the arrow on the "GRT Given to Delegators" card:
+
+**Network Comparison Table:**
 - **Columns**: Arbitrum Network vs Ethereum Network side-by-side comparison
 - **Rows**:
   - Total Rewards (in GRT)
@@ -97,10 +99,9 @@ Accessible by clicking the arrow on the "GRT Given to Delegators" card:
   - Delegator Rewards (in GRT)
   - Total Delegators (historical count)
   - Active Delegators (with GRT) - shows 1,000+ as approximation
-- **Default**: Hidden (click arrow to reveal)
 
-### Arbitrum Quarterly Rewards Distribution
-Always visible table showing historical quarterly data:
+**Arbitrum Quarterly Rewards Distribution:**
+- Historical quarterly data showing rewards distribution
 - **Quarters Displayed**: 6 most recent quarters (Q3-2025 to Q2-2024)
 - **Columns**:
   - Quarter (e.g., Q3-2025)
@@ -110,6 +111,7 @@ Always visible table showing historical quarterly data:
   - Delegator Rewards (GRT) with percentage
 - **Data Source**: Real-time from Arbitrum Analytics subgraph
 - **Purple Theme**: Matches overall dashboard styling
+- **Default**: Hidden (click arrow on "GRT Given to Delegators" card to reveal both tables)
 
 ### Subgraph Metrics (Second Row)
 - **Card 1**: Total Subgraphs (All Networks) - Shows complete count across all 150+ networks

@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time data from Arbitrum Analytics subgraph
   - Purple-themed styling with monospace numbers
   - Hover effects on table rows
-  - Always visible (not collapsible)
+  - Grouped with Network Comparison table in collapsible section
+  - Both tables toggle together via "GRT Given to Delegators" arrow button
+  - Removed emoji (📅) from heading for cleaner look
 - `fetch_quarterly_arbitrum_data()` function to query quarterly data
   - Queries graphNetworkDailyDatas from Arbitrum Analytics subgraph
   - Calculates differences between quarter start and end dates
