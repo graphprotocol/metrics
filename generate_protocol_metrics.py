@@ -1176,30 +1176,27 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             </table>
             
             <div class="stats-container" style="margin-top: 15px;">
-                <div class="stats-card tooltip">
-                    <h2>Total Delegated</h2>
-                    <div class="total" style="color: #4CAF50;">{total_delegated:,}</div>
+                <div class="stats-card">
+                    <h2>Total Rewards<br/>Distributed</h2>
+                    <div class="total">{total_rewards:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
-                <div class="stats-card tooltip">
-                    <h2>Total Undelegated</h2>
-                    <div class="total" style="color: #f44336;">{total_undelegated:,}</div>
+                <div class="stats-card">
+                    <h2>GRT Kept by<br/>Indexers</h2>
+                    <div class="total" style="color: #FF6B6B;">{indexer_rewards:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
-                <div class="stats-card tooltip">
-                    <h2>Net</h2>
-                    <div class="total" style="color: {net_color};">{net:,}</div>
+                <div class="stats-card">
+                    <h2>GRT Given to<br/>Delegators</h2>
+                    <div class="total" style="color: #4ECDC4;">{delegator_rewards:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">
                         <span>GRT</span>
-                        <span class="toggle-arrow" onclick="toggleNetExpand(this)" title="Expand delegation events">›</span>
+                        <span class="toggle-arrow" onclick="toggleNetworkComparison(this)" title="Expand network comparison">›</span>
                     </div>
-                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
             </div>
             
-            <div id="delegationTable">
+            <div id="networkComparisonTable">
                 <table>
                     <thead>
                         <tr>
@@ -1240,27 +1237,30 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             </div>
             
             <div class="stats-container" style="margin-top: 15px;">
-                <div class="stats-card">
-                    <h2>Total Rewards<br/>Distributed</h2>
-                    <div class="total">{total_rewards:,}</div>
+                <div class="stats-card tooltip">
+                    <h2>Total Delegated</h2>
+                    <div class="total" style="color: #4CAF50;">{total_delegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
-                <div class="stats-card">
-                    <h2>GRT Kept by<br/>Indexers</h2>
-                    <div class="total" style="color: #FF6B6B;">{indexer_rewards:,}</div>
+                <div class="stats-card tooltip">
+                    <h2>Total Undelegated</h2>
+                    <div class="total" style="color: #f44336;">{total_undelegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
-                <div class="stats-card">
-                    <h2>GRT Given to<br/>Delegators</h2>
-                    <div class="total" style="color: #4ECDC4;">{delegator_rewards:,}</div>
+                <div class="stats-card tooltip">
+                    <h2>Net</h2>
+                    <div class="total" style="color: {net_color};">{net:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">
                         <span>GRT</span>
-                        <span class="toggle-arrow" onclick="toggleNetworkComparison(this)" title="Expand network comparison">›</span>
+                        <span class="toggle-arrow" onclick="toggleNetExpand(this)" title="Expand delegation events">›</span>
                     </div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions (table shows ≥10,000 GRT)</span>
                 </div>
             </div>
             
-            <div id="networkComparisonTable">
+            <div id="delegationTable">
                 <table>
                     <thead>
                         <tr>
