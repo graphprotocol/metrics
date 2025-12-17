@@ -333,26 +333,23 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
             background: rgba(12, 10, 29, 0.6);
             border: 1px solid #9CA3AF;
             border-radius: 10px;
-            padding: 15px 20px;
+            padding: 20px;
             text-align: center;
             flex: 0 0 200px;
             height: 180px;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: 45px 1fr 35px;
             align-items: center;
         }}
         
         .stats-card h2 {{
             font-size: 0.95em;
             margin: 0;
-            padding-top: 5px;
             color: #F8F6FF;
             font-weight: 400;
             line-height: 1.2;
-            height: 50px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            align-self: start;
+            padding-top: 5px;
         }}
         
         .stats-card .total {{
@@ -360,22 +357,16 @@ def generate_html_dashboard(data: List[NetworkIndexerData], output_path: str = "
             color: #4CAF50;
             font-weight: 600;
             margin: 0;
-            padding: 25px 0;
             line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            align-self: center;
         }}
         
         .stats-card .percentage {{
             font-size: 0.85em;
             color: #9CA3AF;
             margin: 0;
+            align-self: end;
             padding-bottom: 5px;
-            height: 30px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
         }}
         
         table {{
