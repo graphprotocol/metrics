@@ -101,30 +101,40 @@ def fetch_delegation_metrics(api_key: str) -> tuple:
         api_key: The Graph API key
         
     Returns:
-        Tuple of (total_delegated, total_undelegated, net)
+        Tuple of (total_delegated, total_undelegated, net, events_list)
     """
     url = f"https://gateway.thegraph.com/api/{api_key}/subgraphs/id/9wzatP4KXm4WinEhB31MdKST949wCH8ZnkGe8o3DLTwp"
     headers = {"Content-Type": "application/json"}
     
     log_message("Fetching delegation metrics...")
     
-    # Fetch delegation events
+    # Fetch delegation events with full details
     query_delegations = """
     {
       stakeDelegateds(first: 1000, orderBy: blockTimestamp, orderDirection: desc) {
         tokens
+        delegator
+        indexer
+        blockTimestamp
+        transactionHash
       }
     }
     """
     
-    # Fetch undelegation events  
+    # Fetch undelegation events with full details
     query_undelegations = """
     {
       stakeDelegatedLockeds(first: 1000, orderBy: blockTimestamp, orderDirection: desc) {
         tokens
+        delegator
+        indexer
+        blockTimestamp
+        transactionHash
       }
     }
     """
+    
+    events_list = []
     
     try:
         # Fetch delegations
@@ -132,6 +142,17 @@ def fetch_delegation_metrics(api_key: str) -> tuple:
         if response_del.status_code == 200:
             delegations = response_del.json().get("data", {}).get("stakeDelegateds", [])
             total_delegated = sum(int(d["tokens"]) for d in delegations) // 10**18
+            
+            # Add to events list
+            for d in delegations:
+                events_list.append({
+                    "type": "delegation",
+                    "tokens": int(d["tokens"]) // 10**18,
+                    "delegator": d["delegator"],
+                    "indexer": d["indexer"],
+                    "timestamp": int(d["blockTimestamp"]),
+                    "tx_hash": d["transactionHash"]
+                })
         else:
             log_message(f"Failed to fetch delegations: {response_del.status_code}")
             total_delegated = 0
@@ -141,18 +162,32 @@ def fetch_delegation_metrics(api_key: str) -> tuple:
         if response_undel.status_code == 200:
             undelegations = response_undel.json().get("data", {}).get("stakeDelegatedLockeds", [])
             total_undelegated = sum(int(u["tokens"]) for u in undelegations) // 10**18
+            
+            # Add to events list
+            for u in undelegations:
+                events_list.append({
+                    "type": "undelegation",
+                    "tokens": int(u["tokens"]) // 10**18,
+                    "delegator": u["delegator"],
+                    "indexer": u["indexer"],
+                    "timestamp": int(u["blockTimestamp"]),
+                    "tx_hash": u["transactionHash"]
+                })
         else:
             log_message(f"Failed to fetch undelegations: {response_undel.status_code}")
             total_undelegated = 0
         
+        # Sort events by timestamp descending
+        events_list.sort(key=lambda x: x["timestamp"], reverse=True)
+        
         net = total_delegated - total_undelegated
         log_message(f"Delegation metrics: Delegated={total_delegated:,}, Undelegated={total_undelegated:,}, Net={net:,}")
         
-        return (total_delegated, total_undelegated, net)
+        return (total_delegated, total_undelegated, net, events_list)
         
     except Exception as e:
         log_message(f"Error fetching delegation metrics: {e}")
-        return (0, 0, 0)
+        return (0, 0, 0, [])
 
 
 def fetch_network_subgraph_counts(api_key: str) -> List[NetworkIndexerData]:
@@ -243,7 +278,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
     
     Args:
         data: List of NetworkIndexerData objects
-        delegation_metrics: Tuple of (total_delegated, total_undelegated, net)
+        delegation_metrics: Tuple of (total_delegated, total_undelegated, net, events_list)
         output_path: Path to save the HTML file
     """
     # Calculate total across all networks
@@ -257,7 +292,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
     percentage = (total_top_20 / total_all_networks * 100) if total_all_networks > 0 else 0
     
     # Unpack delegation metrics
-    total_delegated, total_undelegated, net = delegation_metrics
+    total_delegated, total_undelegated, net, events_list = delegation_metrics
     net_color = "#4CAF50" if net >= 0 else "#f44336"
     
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -459,6 +494,62 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             transform: rotate(90deg);
         }}
         
+        .tooltip {{
+            position: relative;
+            cursor: help;
+        }}
+        
+        .tooltip .tooltip-text {{
+            visibility: hidden;
+            background-color: #333;
+            color: #F8F6FF;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 9999;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            font-size: 0.85em;
+        }}
+        
+        .tooltip .tooltip-text::after {{
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }}
+        
+        .tooltip:hover .tooltip-text {{
+            visibility: visible;
+            opacity: 1;
+        }}
+        
+        #delegationTable {{
+            margin-top: 20px;
+            display: none;
+        }}
+        
+        #delegationTable table {{
+            font-size: 0.9em;
+        }}
+        
+        #delegationTable th {{
+            font-size: 0.9em;
+        }}
+        
+        #delegationTable td {{
+            font-size: 0.85em;
+        }}
+        
         table {{
             width: 100%;
             border-collapse: collapse;
@@ -627,24 +718,63 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         
         <div class="content">
             <div class="stats-container">
-                <div class="stats-card">
+                <div class="stats-card tooltip">
                     <h2>Total Delegated</h2>
                     <div class="total" style="color: #4CAF50;">{total_delegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
                 </div>
-                <div class="stats-card">
+                <div class="stats-card tooltip">
                     <h2>Total Undelegated</h2>
                     <div class="total" style="color: #f44336;">{total_undelegated:,}</div>
                     <div class="percentage" style="font-size: 0.75em;">GRT</div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
                 </div>
-                <div class="stats-card">
+                <div class="stats-card tooltip">
                     <h2>Net</h2>
                     <div class="total" style="color: {net_color};">{net:,}</div>
                     <div class="percentage">
                         <span style="font-size: 0.75em;">GRT</span>
-                        <span class="toggle-arrow" onclick="toggleNetExpand(this)" title="Expand details">›</span>
+                        <span class="toggle-arrow" onclick="toggleNetExpand(this)" title="Expand delegation events">›</span>
                     </div>
+                    <span class="tooltip-text">Calculated for the last 1,000 transactions</span>
                 </div>
+            </div>
+            
+            <div id="delegationTable">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Event</th>
+                            <th style="width: 20%;">GRT</th>
+                            <th style="width: 20%;">Date</th>
+                            <th style="width: 20%;">Indexer</th>
+                            <th style="width: 20%;">Delegator</th>
+                            <th style="width: 5%;">Tx</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+    
+    # Add delegation events to table (limit to first 50 for performance)
+    for event in events_list[:50]:
+        event_label = "✅ Delegation" if event["type"] == "delegation" else "❌ Undelegation"
+        event_date = datetime.fromtimestamp(event["timestamp"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M")
+        indexer_short = event["indexer"][:8] + "..." + event["indexer"][-6:]
+        delegator_short = event["delegator"][:8] + "..." + event["delegator"][-6:]
+        
+        html_content += f"""
+                        <tr>
+                            <td><span style="font-size: 0.85em;">{event_label}</span></td>
+                            <td>{event["tokens"]:,}</td>
+                            <td><span style="font-size: 0.85em;">{event_date}</span></td>
+                            <td><a href="https://thegraph.com/explorer/profile/{event['indexer']}" target="_blank"><span style="font-size: 0.85em;">{indexer_short}</span></a></td>
+                            <td><a href="https://thegraph.com/explorer/profile/{event['delegator']}" target="_blank"><span style="font-size: 0.85em;">{delegator_short}</span></a></td>
+                            <td><a href="https://arbiscan.io/tx/{event['tx_hash']}" target="_blank"><span style="font-size: 0.85em;">view</span></a></td>
+                        </tr>"""
+    
+    html_content += """
+                    </tbody>
+                </table>
             </div>
             
             <div class="stats-container" style="margin-top: 15px;">
@@ -744,13 +874,16 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         
         function toggleNetExpand(element) {{
             element.classList.toggle('expanded');
+            const delegationTable = document.getElementById('delegationTable');
             
-            // Placeholder for future functionality
             if (element.classList.contains('expanded')) {{
-                console.log('Net expanded - future action here');
-                // Future: Show delegation/undelegation details
+                // Show delegation table
+                delegationTable.style.display = 'block';
+                console.log('Delegation table shown');
             }} else {{
-                console.log('Net collapsed');
+                // Hide delegation table
+                delegationTable.style.display = 'none';
+                console.log('Delegation table hidden');
             }}
         }}
     </script>
