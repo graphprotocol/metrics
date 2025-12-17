@@ -1,10 +1,14 @@
 # The Graph Protocol Metrics Dashboard
 
-A Python-generated static HTML dashboard displaying key metrics for The Graph Protocol's top 20 networks, including subgraph counts and unique indexer statistics.
+A Python-generated static HTML dashboard displaying key metrics for The Graph Protocol, including delegation metrics, subgraph counts across the top 20 networks, and unique indexer statistics.
 
 ## Features
 
-- 📊 **Dual Stats Cards**: Two compact cards showing Total Subgraphs (All Networks) and Top 20 Chains
+- 💰 **Delegation Metrics**: Three cards showing Total Delegated, Total Undelegated, and Net (in GRT)
+  - Real-time data from delegation events on The Graph Network
+  - Color-coded: green for delegations, red for undelegations, dynamic for net
+  - Interactive arrow button on Net card (placeholder for future expansion)
+- 📊 **Dual Subgraph Cards**: Two compact cards showing Total Subgraphs (All Networks) and Top 20 Chains
 - 📈 **Percentage Analysis**: Shows what percentage of total subgraphs the top 20 chains represent
 - 🔽 **Collapsible Table**: Interactive arrow button to show/hide the detailed network table
 - 🔢 **Subgraph Counts**: Total number of subgraphs deployed on each network
@@ -12,7 +16,7 @@ A Python-generated static HTML dashboard displaying key metrics for The Graph Pr
 - 🎨 **Modern UI**: Clean, responsive design with dark theme inspired by REO dashboard
 - 🔗 **Explorer Links**: Direct links to The Graph Explorer for each network
 - 📱 **Responsive**: Works on desktop and mobile devices
-- ⚡ **Interactive**: Click arrow button to expand/collapse network details
+- ⚡ **Interactive**: Click arrow buttons to expand/collapse sections
 
 ## Prerequisites
 
@@ -51,7 +55,14 @@ This will generate an `index.html` file in the same directory. Open it in your w
 
 ## Dashboard Components
 
-### Stats Cards
+### Delegation Metrics (Top Row)
+- **Card 1**: Total Delegated - Total GRT delegated across all delegation events (green)
+- **Card 2**: Total Undelegated - Total GRT undelegated across all undelegation events (red)
+- **Card 3**: Net - Net delegation (Delegated - Undelegated) with dynamic color
+  - Green if positive, red if negative
+  - Arrow button (›) for future expansion functionality
+
+### Subgraph Metrics (Second Row)
 - **Card 1**: Total Subgraphs (All Networks) - Shows complete count across all 150+ networks
 - **Card 2**: Total Subgraphs (Top 20 Chains) - Shows top 20 count with percentage of total
 - **Arrow Button**: Click to expand/collapse the detailed network table
@@ -61,7 +72,7 @@ This will generate an `index.html` file in the same directory. Open it in your w
 - **Network**: Network name with logo and link to Graph Explorer
 - **Subgraph Count**: Total number of subgraphs on the network
 - **Unique Indexers**: Number of unique indexers serving the network
-- **Toggle**: Click the arrow (›) on the Top 20 card to show/hide this table
+- **Toggle**: Click the arrow (›) on the Top 20 Chains card to show/hide this table
 
 ## Project Structure
 

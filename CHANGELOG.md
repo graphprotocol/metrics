@@ -8,14 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Two compact stats cards (200x180px) displaying metrics side by side
+- **Three delegation metrics cards** at the top of dashboard:
+  - Total Delegated (green) - displays sum of all delegation events in GRT
+  - Total Undelegated (red) - displays sum of all undelegation events in GRT
+  - Net (dynamic color) - shows net delegation with arrow toggle button
+- `fetch_delegation_metrics()` function to query delegation data from The Graph Network
+- Queries `stakeDelegateds` and `stakeDelegatedLockeds` events (1000 most recent each)
+- Dynamic color coding: green for positive net, red for negative net
+- Toggle arrow button on Net card (placeholder for future functionality)
+- Two compact stats cards (200x180px) displaying subgraph metrics side by side
 - Total Subgraphs (All Networks) card showing complete network count
 - Total Subgraphs (Top 20 Chains) card with percentage of total networks
 - Percentage calculation showing top 20 chains vs all networks
-- Toggleable arrow button (›/∨) on Top 20 Chains card
+- Toggleable arrow button (›/∨) on Top 20 Chains card for table visibility
 - Interactive table that shows/hides when clicking arrow button
 - Smooth rotation animation for arrow button (0.3s transition)
 - Hover effects on arrow button
+- Two-row card layout: delegation metrics on top, subgraph metrics below
 
 ### Changed
 - Replaced single rectangular stats card with two compact cards
@@ -37,12 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured green numbers align at exactly the same vertical position
 
 ### Technical
+- Added delegation metrics data fetching from subgraph `9wzatP4KXm4WinEhB31MdKST949wCH8ZnkGe8o3DLTwp`
+- Fetches delegation events via GraphQL queries
+- Converts token values from wei to GRT (divides by 10^18)
+- Added `toggleNetExpand()` JavaScript function for Net card arrow
 - Added calculation for total subgraphs across all networks (not just top 20)
 - Implemented percentage calculation (top 20 / total * 100)
 - Changed layout system from Flexbox to CSS Grid (3 rows: 45px, 1fr, 35px)
 - Added JavaScript toggle function for table visibility
 - Table ID added for DOM manipulation
 - Arrow button CSS with rotation transform on toggle
+- Two separate `stats-container` divs for organizing card rows
 
 ## [0.0.1] - 2025-12-17
 
