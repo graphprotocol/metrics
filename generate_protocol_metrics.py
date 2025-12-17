@@ -741,7 +741,7 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
         .stats-card h2 {{
             font-size: 0.95em;
             margin: 0;
-            color: #494755;
+            color: #9CA3AF;
             font-weight: 400;
             line-height: 1.2;
             align-self: start;
