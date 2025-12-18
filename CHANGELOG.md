@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **30d/90d Period Toggle**: Toggle switch in breadcrumb row for selecting time period
+  - Located in the first row (breadcrumb), aligned to the right
+  - Default enabled on 30d (purple background, white text)
+  - 90d option available (gray text when inactive)
+  - Active state shows purple background (#6F4CFF) with white text
+  - Inactive state shows gray text (#9CA3AF) with transparent background
+  - Old-style toggle switch design matching dashboard theme
+  - JavaScript handler updates `currentPeriod` variable for future data filtering
+- **Delegation Statistics File Export**: Automatic saving of delegation data to `last_stats_run.txt`
+  - Saves all delegation metrics after each dashboard generation
+  - Includes summary statistics (total delegated, undelegated, net, total events)
+  - Event breakdown by type (delegations vs undelegations)
+  - Complete list of all delegation events with full details:
+    - Event type (Delegation/Undelegation)
+    - GRT amount
+    - Date and time (UTC)
+    - Indexer address
+    - Delegator address
+    - Transaction hash
+  - Formatted text file with headers and separators for easy reading
+  - Includes timestamp and version information
+  - `save_delegation_stats()` function added to handle file generation
 - **Arbitrum Quarterly Rewards Distribution table**: Historical quarterly rewards data
   - Shows 6 most recent quarters (Q3-2025 through Q2-2024)
   - Includes Q3-2025 (Jul-Sep 2025) - newly added quarter
@@ -85,6 +107,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two-row card layout: delegation metrics on top, subgraph metrics below
 
 ### Changed
+- **Breadcrumb layout**: Updated to use flexbox with `justify-content: space-between`
+  - Breadcrumb content wrapped in `.breadcrumb-left` div
+  - Toggle button positioned on the right side
+  - Maintains responsive design for mobile devices
 - **Enhanced arrow button visibility and styling**:
   - Increased font size from 1.2em to 1.5em (25% larger)
   - Changed color from gray (#9CA3AF) to white (#F8F6FF)
@@ -124,6 +150,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured green numbers align at exactly the same vertical position
 
 ### Technical
+- **Period toggle implementation**:
+  - Added `.period-toggle` CSS with old-style toggle switch design
+  - `.period-toggle-option` styling for active/inactive states
+  - Purple theme (#6F4CFF) for active state matching dashboard accent color
+  - `togglePeriod()` JavaScript function handles click events
+  - Stores current period in `currentPeriod` variable for future use
+- **Delegation stats file generation**:
+  - `save_delegation_stats()` function creates formatted text file
+  - Called automatically in `main()` after fetching delegation metrics
+  - File saved as `last_stats_run.txt` in script directory
+  - Uses UTF-8 encoding for proper character support
+  - Includes formatted columns for easy reading
+  - Timestamp conversion from Unix timestamp to UTC datetime format
 - **Network comparison table implementation**:
   - Added `toggleNetworkComparison()` JavaScript function to control table visibility
   - Added `#networkComparisonTable` CSS with purple-themed styling

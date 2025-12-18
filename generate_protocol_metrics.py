@@ -560,6 +560,61 @@ def fetch_network_subgraph_counts(api_key: str) -> List[NetworkIndexerData]:
     return result
 
 
+def save_delegation_stats(delegation_metrics: tuple, output_path: str = "last_stats_run.txt"):
+    """
+    Save delegation statistics to a text file.
+    
+    Args:
+        delegation_metrics: Tuple of (total_delegated, total_undelegated, net, events_list)
+        output_path: Path to save the stats file
+    """
+    total_delegated, total_undelegated, net, events_list = delegation_metrics
+    
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write("=" * 80 + "\n")
+        f.write("DELEGATION STATISTICS\n")
+        f.write("=" * 80 + "\n")
+        f.write(f"Generated on: {timestamp}\n")
+        f.write(f"Version: v{VERSION}\n")
+        f.write("\n")
+        
+        # Summary statistics
+        f.write("SUMMARY STATISTICS\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"Total Delegated:     {total_delegated:,} GRT\n")
+        f.write(f"Total Undelegated:   {total_undelegated:,} GRT\n")
+        f.write(f"Net:                 {net:,} GRT\n")
+        f.write(f"Total Events:        {len(events_list)}\n")
+        f.write("\n")
+        
+        # Breakdown by type
+        delegations = [e for e in events_list if e["type"] == "delegation"]
+        undelegations = [e for e in events_list if e["type"] == "undelegation"]
+        f.write("EVENT BREAKDOWN\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"Delegations:         {len(delegations)}\n")
+        f.write(f"Undelegations:       {len(undelegations)}\n")
+        f.write("\n")
+        
+        # All events
+        f.write("ALL DELEGATION EVENTS\n")
+        f.write("-" * 80 + "\n")
+        f.write(f"{'Type':<15} {'GRT':<20} {'Date':<20} {'Indexer':<45} {'Delegator':<45} {'Tx Hash':<70}\n")
+        f.write("-" * 80 + "\n")
+        
+        for event in events_list:
+            event_type = "Delegation" if event["type"] == "delegation" else "Undelegation"
+            event_date = datetime.fromtimestamp(event["timestamp"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{event_type:<15} {event['tokens']:<20,} {event_date:<20} {event['indexer']:<45} {event['delegator']:<45} {event['tx_hash']:<70}\n")
+        
+        f.write("\n")
+        f.write("=" * 80 + "\n")
+    
+    log_message(f"Delegation statistics saved to {output_path}")
+
+
 def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: tuple, rewards_metrics: tuple, network_comparison: dict, quarterly_data: list, output_path: str = "index.html"):
     """
     Generate HTML dashboard with network metrics.
@@ -631,7 +686,46 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             font-size: 14px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
+        }}
+        
+        .breadcrumb-left {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        
+        .period-toggle {{
+            display: flex;
+            align-items: center;
+            background: rgba(12, 10, 29, 0.8);
+            border: 2px solid #9CA3AF;
+            border-radius: 25px;
+            padding: 4px;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+        }}
+        
+        .period-toggle-option {{
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #9CA3AF;
+            background: transparent;
+        }}
+        
+        .period-toggle-option.active {{
+            color: #F8F6FF;
+            background: #6F4CFF;
+            border-color: #6F4CFF;
+        }}
+        
+        .period-toggle-option:not(.active):hover {{
+            color: #F8F6FF;
         }}
         
         .breadcrumb a {{
@@ -1100,12 +1194,18 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="../index.html">
-            <span class="home-icon"></span>
-            <b>Home</b>
-        </a>
-        <span class="breadcrumb-separator">>></span>
-        <span>The Graph Protocol Metrics</span>
+        <div class="breadcrumb-left">
+            <a href="../index.html">
+                <span class="home-icon"></span>
+                <b>Home</b>
+            </a>
+            <span class="breadcrumb-separator">>></span>
+            <span>The Graph Protocol Metrics</span>
+        </div>
+        <div class="period-toggle" onclick="togglePeriod(event)">
+            <span class="period-toggle-option active" data-period="30d">30d</span>
+            <span class="period-toggle-option" data-period="90d">90d</span>
+        </div>
     </div>
     
     <div class="container">
@@ -1420,6 +1520,33 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
     </div>
     
     <script>
+        let currentPeriod = '30d';
+        
+        function togglePeriod(event) {{
+            const clickedOption = event.target;
+            if (!clickedOption.classList.contains('period-toggle-option')) {{
+                return;
+            }}
+            
+            const newPeriod = clickedOption.getAttribute('data-period');
+            if (newPeriod === currentPeriod) {{
+                return;
+            }}
+            
+            // Remove active class from all options
+            const allOptions = document.querySelectorAll('.period-toggle-option');
+            allOptions.forEach(option => {{
+                option.classList.remove('active');
+            }});
+            
+            // Add active class to clicked option
+            clickedOption.classList.add('active');
+            currentPeriod = newPeriod;
+            
+            console.log('Period changed to:', currentPeriod);
+            // Add your logic here to update data based on period
+        }}
+        
         function toggleExpand(element) {{
             element.classList.toggle('expanded');
             const table = document.getElementById('networkTable');
@@ -1500,6 +1627,9 @@ def main():
     
     # Fetch delegation metrics
     delegation_metrics = fetch_delegation_metrics(api_key)
+    
+    # Save delegation statistics to file
+    save_delegation_stats(delegation_metrics)
     
     # Fetch network data
     network_data = fetch_network_subgraph_counts(api_key)

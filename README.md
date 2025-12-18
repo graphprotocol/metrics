@@ -4,6 +4,7 @@ A Python-generated static HTML dashboard displaying key metrics for The Graph Pr
 
 ## Features
 
+- ⏱️ **Period Toggle**: 30d/90d toggle switch in breadcrumb row for selecting time period (default: 30d)
 - 💰 **Delegation Metrics** (First Row): Three cards showing Total Delegated, Total Undelegated, and Net (in GRT)
   - Real-time data from delegation events on The Graph Network
   - Color-coded: green for delegations, red for undelegations, dynamic for net
@@ -59,7 +60,17 @@ python generate_protocol_metrics.py
 
 This will generate an `index.html` file in the same directory. Open it in your web browser to view the dashboard.
 
+The script also automatically saves delegation statistics to `last_stats_run.txt` after each run, containing all delegation event details for reference.
+
 ## Dashboard Components
+
+### Period Toggle (Breadcrumb Row)
+- **30d/90d Toggle**: Toggle switch located in the breadcrumb row, aligned to the right
+  - Default: 30d enabled (purple background, white text)
+  - Click to switch between 30d and 90d periods
+  - Active period highlighted with purple background (#6F4CFF)
+  - Inactive period shown in gray (#9CA3AF)
+  - Old-style toggle switch design matching dashboard theme
 
 ### Delegation Metrics (Top Row)
 - **Card 1**: Total Delegated - Total GRT delegated across all delegation events (green)
@@ -131,6 +142,7 @@ Accessible by clicking the arrow on the "GRT Given to Delegators" card:
 metrics/
 ├── generate_protocol_metrics.py   # Main dashboard generator script
 ├── index.html                      # Generated dashboard (output)
+├── last_stats_run.txt              # Delegation statistics export (generated)
 ├── README.md                       # This file
 ├── CHANGELOG.md                    # Version history (see CHANGELOG.md)
 ├── LICENSE                         # MIT License (see LICENSE)
