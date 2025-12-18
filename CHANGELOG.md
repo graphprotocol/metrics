@@ -7,29 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2025-12-17
+
 ### Added
-- **30d/90d Period Toggle**: Toggle switch in breadcrumb row for selecting time period
+- **All/90d/30d Period Toggle**: Toggle switch in breadcrumb row for selecting time period
   - Located in the first row (breadcrumb), aligned to the right
-  - Default enabled on 30d (purple background, white text)
-  - 90d option available (gray text when inactive)
+  - Three options: All (default), 90d, and 30d
   - Active state shows purple background (#6F4CFF) with white text
   - Inactive state shows gray text (#9CA3AF) with transparent background
   - Old-style toggle switch design matching dashboard theme
-  - JavaScript handler updates `currentPeriod` variable for future data filtering
-- **Delegation Statistics File Export**: Automatic saving of delegation data to `last_stats_run.txt`
-  - Saves all delegation metrics after each dashboard generation
-  - Includes summary statistics (total delegated, undelegated, net, total events)
-  - Event breakdown by type (delegations vs undelegations)
-  - Complete list of all delegation events with full details:
-    - Event type (Delegation/Undelegation)
-    - GRT amount
-    - Date and time (UTC)
-    - Indexer address
-    - Delegator address
-    - Transaction hash
-  - Formatted text file with headers and separators for easy reading
-  - Includes timestamp and version information
-  - `save_delegation_stats()` function added to handle file generation
+  - Real-time filtering of delegation data based on selected period
+- **Period-based Data Filtering**: Dynamic filtering of delegation statistics by time period
+  - "All" shows all available data (default)
+  - "90d" filters to show statistics for the past 90 days
+  - "30d" filters to show statistics for the past 30 days
+  - Delegation cards (Total Delegated, Total Undelegated, Net) update dynamically
+  - Delegation events table filters and updates based on selected period
+  - Uses approximate day calculations for efficient filtering
+- **Statistics JSON Export**: Automatic saving of all statistics to `last_stats_run.json`
+  - Saves comprehensive metrics after each dashboard generation
+  - JSON format for easy programmatic access
+  - Includes:
+    - Last run date (YYYY-MM-DD format)
+    - Subgraph counts (all networks and top 20)
+    - Delegation statistics (without transaction details)
+    - GRT rewards distribution (per network and quarterly)
+  - `save_stats_json()` function handles JSON file generation
+- **Hardcoded Ethereum Network Data**: Ethereum statistics are now hardcoded
+  - Ethereum network is inactive, data is static
+  - Removes unnecessary API calls for Ethereum subgraph
+  - Improves script execution speed
+  - Hardcoded values: total_rewards: 827351728, indexer_rewards: 345569142, delegator_rewards: 481782586, delegator_count: 17387, active_delegators: 9018
+
+### Changed
+- **Period Toggle Options**: Changed from "30d / 90d" to "All / 90d / 30d"
+  - Default period changed from "30d" to "All"
+  - Added "All" option to show complete historical data
+- **Statistics Export Format**: Changed from text file (`last_stats_run.txt`) to JSON file (`last_stats_run.json`)
+  - More structured and machine-readable format
+  - Includes all dashboard metrics in organized sections
+  - Easier to parse and integrate with other tools
+- **Breadcrumb Layout**: Updated to use flexbox with `justify-content: space-between`
+  - Breadcrumb content wrapped in `.breadcrumb-left` div
+  - Toggle button positioned on the right side
+  - Maintains responsive design for mobile devices
+
+### Technical
+- **Period filtering implementation**:
+  - Added `filterEventsByPeriod()` JavaScript function for time-based filtering
+  - Added `calculateTotals()` function to recalculate statistics from filtered events
+  - Added `updateDelegationDisplay()` and `updateDelegationTable()` for dynamic UI updates
+  - Delegation events data embedded in JavaScript for client-side filtering
+  - Approximate day calculations (90/30 days * 24 * 60 * 60 seconds)
+- **JSON export implementation**:
+  - `save_stats_json()` function creates structured JSON output
+  - Includes subgraph data, delegation metrics, and rewards distribution
+  - Proper JSON escaping for JavaScript embedding
+- **Ethereum data hardcoding**:
+  - Removed Ethereum subgraph API calls from `fetch_network_comparison_stats()`
+  - Hardcoded Ethereum values in both `fetch_network_comparison_stats()` and `save_stats_json()`
+  - Updated function documentation to reflect hardcoded data
+
+## [Unreleased]
+
+### Added
 - **Arbitrum Quarterly Rewards Distribution table**: Historical quarterly rewards data
   - Shows 6 most recent quarters (Q3-2025 through Q2-2024)
   - Includes Q3-2025 (Jul-Sep 2025) - newly added quarter

@@ -162,7 +162,7 @@ The dashboard uses a dark theme with the following color palette:
 
 ## Version
 
-Current version: **v0.0.1** (December 17, 2025)
+Current version: **v0.0.2** (December 17, 2025)
 
 For detailed version history and changes, see [CHANGELOG.md](CHANGELOG.md).
 

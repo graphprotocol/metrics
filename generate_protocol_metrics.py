@@ -6,7 +6,7 @@ This script generates a static HTML dashboard showing network metrics
 for The Graph Protocol, including subgraph counts and unique indexers
 per network (top 20 networks by subgraph count).
 
-Version: v0.0.1
+Version: v0.0.2
 Date: December 17, 2025
 Author: Paolo Diomede
 """
@@ -20,7 +20,7 @@ from typing import List
 from dotenv import load_dotenv
 
 # Version of the dashboard generator
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 
 # Data class for network subgraph and unique indexer counts
 @dataclass
@@ -215,7 +215,7 @@ def fetch_quarterly_arbitrum_data(api_key: str) -> list:
 
 def fetch_network_comparison_stats(api_key: str) -> dict:
     """
-    Fetch network statistics for Arbitrum and Ethereum for comparison.
+    Fetch network statistics for Arbitrum. Ethereum data is hardcoded since the network is inactive.
     
     Args:
         api_key: The Graph API key
@@ -225,9 +225,8 @@ def fetch_network_comparison_stats(api_key: str) -> dict:
     """
     log_message("Fetching network comparison statistics...")
     
-    # Subgraph IDs
+    # Subgraph ID for Arbitrum
     ARBITRUM_SUBGRAPH_ID = "DZz4kDTdmzWLWsV373w2bSmoar3umKKH9y82SUKr5qmp"
-    ETHEREUM_SUBGRAPH_ID = "9Co7EQe5PgW3ugCUJrJgRv4u9zdEuDJf8NvMWftNsBH8"
     
     base_url = "https://gateway-arbitrum.network.thegraph.com/api"
     headers = {"Content-Type": "application/json"}
@@ -243,9 +242,18 @@ def fetch_network_comparison_stats(api_key: str) -> dict:
     }
     """
     
+    # Hardcoded Ethereum data (network is inactive, data is static)
+    ETHEREUM_STATIC_DATA = {
+        'total_rewards': 827351728,
+        'indexer_rewards': 345569142,
+        'delegator_rewards': 481782586,
+        'delegator_count': 17387,
+        'active_delegators': 9018
+    }
+    
     result = {
         'arbitrum': {},
-        'ethereum': {}
+        'ethereum': ETHEREUM_STATIC_DATA
     }
     
     # Helper function to count all active delegators with pagination
@@ -307,26 +315,7 @@ def fetch_network_comparison_stats(api_key: str) -> dict:
     except Exception as e:
         log_message(f"Error fetching Arbitrum stats: {e}")
     
-    # Fetch Ethereum stats
-    try:
-        eth_url = f"{base_url}/{api_key}/subgraphs/id/{ETHEREUM_SUBGRAPH_ID}"
-        response = requests.post(eth_url, json={"query": query}, headers=headers)
-        if response.status_code == 200:
-            data = response.json().get("data", {}).get("graphNetwork", {})
-            if data:
-                # Get full count of active delegators with pagination
-                active_delegators_count = count_active_delegators(eth_url, headers, "Ethereum")
-                
-                result['ethereum'] = {
-                    'total_rewards': int(data.get("totalIndexingRewards", "0")) // 10**18,
-                    'indexer_rewards': int(data.get("totalIndexingIndexerRewards", "0")) // 10**18,
-                    'delegator_rewards': int(data.get("totalIndexingDelegatorRewards", "0")) // 10**18,
-                    'delegator_count': int(data.get("delegatorCount", "0")),
-                    'active_delegators': active_delegators_count
-                }
-                log_message(f"Ethereum stats fetched: Total Rewards={result['ethereum']['total_rewards']:,}")
-    except Exception as e:
-        log_message(f"Error fetching Ethereum stats: {e}")
+    log_message("Using hardcoded Ethereum data (network inactive)")
     
     return result
 
@@ -560,59 +549,107 @@ def fetch_network_subgraph_counts(api_key: str) -> List[NetworkIndexerData]:
     return result
 
 
-def save_delegation_stats(delegation_metrics: tuple, output_path: str = "last_stats_run.txt"):
+def save_stats_json(network_data: List[NetworkIndexerData], delegation_metrics: tuple, 
+                    rewards_metrics: tuple, network_comparison: dict, quarterly_data: list,
+                    output_path: str = "last_stats_run.json"):
     """
-    Save delegation statistics to a text file.
+    Save all statistics to a JSON file.
     
     Args:
+        network_data: List of NetworkIndexerData objects (subgraph counts)
         delegation_metrics: Tuple of (total_delegated, total_undelegated, net, events_list)
-        output_path: Path to save the stats file
+        rewards_metrics: Tuple of (total_rewards, indexer_rewards, delegator_rewards)
+        network_comparison: Dictionary with 'arbitrum' and 'ethereum' network stats
+        quarterly_data: List of quarterly rewards data
+        output_path: Path to save the JSON file
     """
     total_delegated, total_undelegated, net, events_list = delegation_metrics
+    total_rewards, indexer_rewards, delegator_rewards = rewards_metrics
     
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    # Get current date (just the date, no time)
+    run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
+    # Prepare subgraph count data
+    subgraph_data = {
+        "total_all_networks": sum(entry.subgraph_count for entry in network_data),
+        "networks": []
+    }
+    
+    # Sort by subgraph count and get top 20
+    sorted_network_data = sorted(network_data, key=lambda x: x.subgraph_count, reverse=True)[:20]
+    total_top_20 = sum(entry.subgraph_count for entry in sorted_network_data)
+    
+    subgraph_data["total_top_20_networks"] = total_top_20
+    subgraph_data["top_20_percentage"] = round((total_top_20 / subgraph_data["total_all_networks"] * 100) if subgraph_data["total_all_networks"] > 0 else 0, 2)
+    
+    for entry in sorted_network_data:
+        subgraph_data["networks"].append({
+            "network_name": entry.network_name,
+            "subgraph_count": entry.subgraph_count,
+            "unique_indexer_count": entry.unique_indexer_count
+        })
+    
+    # Prepare delegation data (without transactions)
+    delegation_data = {
+        "total_delegated": total_delegated,
+        "total_undelegated": total_undelegated,
+        "net": net,
+        "total_events": len(events_list),
+        "delegation_count": len([e for e in events_list if e["type"] == "delegation"]),
+        "undelegation_count": len([e for e in events_list if e["type"] == "undelegation"])
+    }
+    
+    # Hardcoded Ethereum data (network is inactive, data is static)
+    ETHEREUM_STATIC_DATA = {
+        "total_rewards": 827351728,
+        "indexer_rewards": 345569142,
+        "delegator_rewards": 481782586,
+        "delegator_count": 17387,
+        "active_delegators": 9018
+    }
+    
+    # Prepare GRT rewards distribution data
+    rewards_data = {
+        "total_rewards": total_rewards,
+        "indexer_rewards": indexer_rewards,
+        "delegator_rewards": delegator_rewards,
+        "by_network": {
+            "arbitrum": {
+                "total_rewards": network_comparison.get('arbitrum', {}).get('total_rewards', 0),
+                "indexer_rewards": network_comparison.get('arbitrum', {}).get('indexer_rewards', 0),
+                "delegator_rewards": network_comparison.get('arbitrum', {}).get('delegator_rewards', 0),
+                "delegator_count": network_comparison.get('arbitrum', {}).get('delegator_count', 0),
+                "active_delegators": network_comparison.get('arbitrum', {}).get('active_delegators', 0)
+            },
+            "ethereum": ETHEREUM_STATIC_DATA
+        },
+        "quarterly": []
+    }
+    
+    # Add quarterly data
+    for quarter in quarterly_data:
+        rewards_data["quarterly"].append({
+            "quarter": quarter['quarter'],
+            "period": quarter['period'],
+            "total_rewards": quarter['total_rewards'],
+            "indexer_rewards": quarter['indexer_rewards'],
+            "delegator_rewards": quarter['delegator_rewards']
+        })
+    
+    # Combine all data
+    stats_data = {
+        "last_run_date": run_date,
+        "version": VERSION,
+        "subgraphs": subgraph_data,
+        "delegations": delegation_data,
+        "rewards_distribution": rewards_data
+    }
+    
+    # Write JSON file
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write("=" * 80 + "\n")
-        f.write("DELEGATION STATISTICS\n")
-        f.write("=" * 80 + "\n")
-        f.write(f"Generated on: {timestamp}\n")
-        f.write(f"Version: v{VERSION}\n")
-        f.write("\n")
-        
-        # Summary statistics
-        f.write("SUMMARY STATISTICS\n")
-        f.write("-" * 80 + "\n")
-        f.write(f"Total Delegated:     {total_delegated:,} GRT\n")
-        f.write(f"Total Undelegated:   {total_undelegated:,} GRT\n")
-        f.write(f"Net:                 {net:,} GRT\n")
-        f.write(f"Total Events:        {len(events_list)}\n")
-        f.write("\n")
-        
-        # Breakdown by type
-        delegations = [e for e in events_list if e["type"] == "delegation"]
-        undelegations = [e for e in events_list if e["type"] == "undelegation"]
-        f.write("EVENT BREAKDOWN\n")
-        f.write("-" * 80 + "\n")
-        f.write(f"Delegations:         {len(delegations)}\n")
-        f.write(f"Undelegations:       {len(undelegations)}\n")
-        f.write("\n")
-        
-        # All events
-        f.write("ALL DELEGATION EVENTS\n")
-        f.write("-" * 80 + "\n")
-        f.write(f"{'Type':<15} {'GRT':<20} {'Date':<20} {'Indexer':<45} {'Delegator':<45} {'Tx Hash':<70}\n")
-        f.write("-" * 80 + "\n")
-        
-        for event in events_list:
-            event_type = "Delegation" if event["type"] == "delegation" else "Undelegation"
-            event_date = datetime.fromtimestamp(event["timestamp"], tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"{event_type:<15} {event['tokens']:<20,} {event_date:<20} {event['indexer']:<45} {event['delegator']:<45} {event['tx_hash']:<70}\n")
-        
-        f.write("\n")
-        f.write("=" * 80 + "\n")
+        json.dump(stats_data, f, indent=2, ensure_ascii=False)
     
-    log_message(f"Delegation statistics saved to {output_path}")
+    log_message(f"Statistics saved to {output_path}")
 
 
 def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: tuple, rewards_metrics: tuple, network_comparison: dict, quarterly_data: list, output_path: str = "index.html"):
@@ -643,6 +680,9 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
     
     # Unpack rewards metrics
     total_rewards, indexer_rewards, delegator_rewards = rewards_metrics
+    
+    # Convert events_list to JSON string for JavaScript embedding
+    events_json = json.dumps(events_list).replace('</script>', '<\\/script>')
     
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     
@@ -1203,8 +1243,9 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             <span>The Graph Protocol Metrics</span>
         </div>
         <div class="period-toggle" onclick="togglePeriod(event)">
-            <span class="period-toggle-option active" data-period="30d">30d</span>
+            <span class="period-toggle-option active" data-period="All">All</span>
             <span class="period-toggle-option" data-period="90d">90d</span>
+            <span class="period-toggle-option" data-period="30d">30d</span>
         </div>
     </div>
     
@@ -1452,53 +1493,6 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
                         </tr>"""
     
     html_content += f"""
-                    </tbody>
-                </table>
-            </div>
-            
-            <table id="networkTable" style="display: none; transition: all 0.3s ease;">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Rank</th>
-                        <th style="width: 40%;">Network</th>
-                        <th style="width: 25%;">Subgraph Count</th>
-                        <th style="width: 25%;">Unique Indexers</th>
-                    </tr>
-                </thead>
-                <tbody>
-"""
-    
-    # Add table rows
-    for idx, entry in enumerate(sorted_data, 1):
-        logo = NETWORK_LOGOS.get(entry.network_name.lower(), "")
-        logo_html = f'<img src="{logo}" alt="{entry.network_name}" class="network-logo" onerror="this.style.display=\'none\'" />' if logo else ""
-        
-        # Format network name
-        if entry.network_name.lower() == "mainnet":
-            name = "Ethereum (Mainnet)"
-        elif entry.network_name.lower() == "matic":
-            name = "Polygon (Matic)"
-        else:
-            name = entry.network_name.title()
-        
-        html_content += f"""
-                    <tr>
-                        <td><span class="rank">#{idx}</span></td>
-                        <td>
-                            <div class="network-name">
-                                {logo_html}
-                                <a href="https://thegraph.com/explorer?indexedNetwork={entry.network_name}&orderBy=Query+Count&orderDirection=desc" 
-                                   target="_blank" style="color: #F8F6FF; text-decoration: none;">
-                                    {name}
-                                </a>
-                            </div>
-                        </td>
-                        <td>{entry.subgraph_count:,}</td>
-                        <td>{entry.unique_indexer_count}</td>
-                    </tr>
-"""
-    
-    html_content += f"""
                 </tbody>
             </table>
         </div>
@@ -1520,7 +1514,94 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
     </div>
     
     <script>
-        let currentPeriod = '30d';
+        // Store delegation events data for filtering
+        const delegationEventsData = {events_json};
+        let currentPeriod = 'All';
+        
+        function filterEventsByPeriod(events, period) {{
+            if (period === 'All') {{
+                return events;
+            }}
+            
+            const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+            const daysAgo = period === '90d' ? 90 : 30;
+            const cutoffTimestamp = now - (daysAgo * 24 * 60 * 60); // Approximate: days * hours * minutes * seconds
+            
+            return events.filter(event => event.timestamp >= cutoffTimestamp);
+        }}
+        
+        function calculateTotals(filteredEvents) {{
+            let totalDelegated = 0;
+            let totalUndelegated = 0;
+            
+            filteredEvents.forEach(event => {{
+                if (event.type === 'delegation') {{
+                    totalDelegated += event.tokens;
+                }} else if (event.type === 'undelegation') {{
+                    totalUndelegated += event.tokens;
+                }}
+            }});
+            
+            return {{
+                total_delegated: totalDelegated,
+                total_undelegated: totalUndelegated,
+                net: totalDelegated - totalUndelegated
+            }};
+        }}
+        
+        function updateDelegationDisplay(totals) {{
+            // Find delegation cards by their h2 text content
+            const statsCards = document.querySelectorAll('.stats-container .stats-card');
+            
+            statsCards.forEach(card => {{
+                const h2 = card.querySelector('h2');
+                if (!h2) return;
+                
+                const title = h2.textContent.trim();
+                const totalElement = card.querySelector('.total');
+                
+                if (!totalElement) return;
+                
+                if (title === 'Total Delegated') {{
+                    totalElement.textContent = totals.total_delegated.toLocaleString();
+                }} else if (title === 'Total Undelegated') {{
+                    totalElement.textContent = totals.total_undelegated.toLocaleString();
+                }} else if (title === 'Net') {{
+                    totalElement.textContent = totals.net.toLocaleString();
+                    // Update color based on net value
+                    totalElement.style.color = totals.net >= 0 ? '#4CAF50' : '#f44336';
+                }}
+            }});
+        }}
+        
+        function updateDelegationTable(filteredEvents) {{
+            const tableBody = document.querySelector('#delegationTable tbody');
+            if (!tableBody) return;
+            
+            // Clear existing rows
+            tableBody.innerHTML = '';
+            
+            // Filter for >= 10,000 GRT and add rows
+            filteredEvents.forEach(event => {{
+                if (event.tokens < 10000) return;
+                
+                const eventLabel = event.type === 'delegation' ? '✅ Delegation' : '❌ Undelegation';
+                const eventDate = new Date(event.timestamp * 1000).toISOString().replace('T', ' ').substring(0, 16);
+                const indexerShort = event.indexer.substring(0, 8) + '...' + event.indexer.substring(event.indexer.length - 6);
+                const delegatorShort = event.delegator.substring(0, 8) + '...' + event.delegator.substring(event.delegator.length - 6);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span style="font-size: 0.85em;">${{eventLabel}}</span></td>
+                    <td>${{event.tokens.toLocaleString()}}</td>
+                    <td><span style="font-size: 0.85em;">${{eventDate}}</span></td>
+                    <td><a href="https://thegraph.com/explorer/profile/${{event.indexer}}" target="_blank"><span style="font-size: 0.85em;">${{indexerShort}}</span></a></td>
+                    <td><a href="https://thegraph.com/explorer/profile/${{event.delegator}}" target="_blank"><span style="font-size: 0.85em;">${{delegatorShort}}</span></a></td>
+                    <td><a href="https://arbiscan.io/tx/${{event.tx_hash}}" target="_blank"><span style="font-size: 0.85em;">view</span></a></td>
+                `;
+                tableBody.appendChild(row);
+            }});
+        }}
         
         function togglePeriod(event) {{
             const clickedOption = event.target;
@@ -1543,8 +1624,17 @@ def generate_html_dashboard(data: List[NetworkIndexerData], delegation_metrics: 
             clickedOption.classList.add('active');
             currentPeriod = newPeriod;
             
-            console.log('Period changed to:', currentPeriod);
-            // Add your logic here to update data based on period
+            // Filter events based on period
+            const filteredEvents = filterEventsByPeriod(delegationEventsData, currentPeriod);
+            
+            // Calculate totals from filtered events
+            const totals = calculateTotals(filteredEvents);
+            
+            // Update display
+            updateDelegationDisplay(totals);
+            updateDelegationTable(filteredEvents);
+            
+            console.log('Period changed to:', currentPeriod, 'Events:', filteredEvents.length, 'Totals:', totals);
         }}
         
         function toggleExpand(element) {{
@@ -1628,15 +1718,15 @@ def main():
     # Fetch delegation metrics
     delegation_metrics = fetch_delegation_metrics(api_key)
     
-    # Save delegation statistics to file
-    save_delegation_stats(delegation_metrics)
-    
     # Fetch network data
     network_data = fetch_network_subgraph_counts(api_key)
     
     if not network_data:
         log_message("ERROR: No data retrieved")
         return
+    
+    # Save all statistics to JSON file
+    save_stats_json(network_data, delegation_metrics, rewards_metrics, network_comparison, quarterly_data)
     
     # Generate HTML dashboard
     generate_html_dashboard(network_data, delegation_metrics, rewards_metrics, network_comparison, quarterly_data)
